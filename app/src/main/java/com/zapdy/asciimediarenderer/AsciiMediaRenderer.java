@@ -8,7 +8,7 @@ public class AsciiMediaRenderer {
     private static final double RED_WEIGHT = 0.21;
     private static final double GREEN_WEIGHT = 0.72;
     private static final double BLUE_WEIGHT = 0.07;
-
+    private static final int BOTTOM_OFFSET = 1;
     private static final char[] ASCII_CHARACTERS = " -.`-,:'_;~*\"\\/^i!rl+|I=)(t<j>f1}{vx?L7z][JcTnuysYkohF4eaV3205pbqdXPZUC69K#AwHmg8E%&S$DORNGQBMW@".toCharArray();
 
     private static char getCharacterFromBrightness(double brightness) {
@@ -38,8 +38,13 @@ public class AsciiMediaRenderer {
     }
     
     public static void printAsciiImage(BufferedImage image, int terminalColumns, int terminalRows) {
+        terminalRows = terminalRows - BOTTOM_OFFSET;
         image = resizeImage(image, terminalColumns / 2, terminalRows);
+        int leftOffset = (terminalColumns - image.getWidth()) / 2;
         for (int h = 0; h < image.getHeight(); h++) {
+            for (int i = 0; i < leftOffset; i++) {
+                IO.print(" ");
+            }
             for (int w = 0; w < image.getWidth(); w++) {
                 double brightness = getBrightnessFromRGB(image.getRGB(w, h));
                 IO.print(getCharacterFromBrightness(brightness));
