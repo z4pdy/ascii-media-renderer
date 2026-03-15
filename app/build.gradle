@@ -25,6 +25,7 @@ dependencies {
     implementation libs.guava
     implementation 'org.jline:jline:4.0.0'
     implementation 'net.java.dev.jna:jna:5.14.0'
+    implementation 'org.bytedeco:javacv-platform:1.5.6'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -37,6 +38,7 @@ java {
 application {
     // Define the main class for the application.
     mainClass = 'com.zapdy.asciimediarenderer.Main'
+    applicationDefaultJvmArgs = ["--enable-native-access=ALL-UNNAMED"]
 }
 
 tasks.named('test') {

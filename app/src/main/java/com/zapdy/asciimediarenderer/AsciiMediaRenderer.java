@@ -3,6 +3,9 @@ package com.zapdy.asciimediarenderer;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.Java2DFrameUtils;
 
 public class AsciiMediaRenderer {
     private static final double RED_WEIGHT = 0.21;
@@ -38,18 +41,56 @@ public class AsciiMediaRenderer {
     }
     
     public static void printAsciiImage(BufferedImage image, int terminalColumns, int terminalRows) {
+        printAsciiImage(image, terminalColumns, terminalRows, false);
+    }
+
+    public static void printAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, Boolean clearTerminal) {
+        StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
         image = resizeImage(image, terminalColumns / 2, terminalRows);
         int leftOffset = (terminalColumns - image.getWidth()) / 2;
         for (int h = 0; h < image.getHeight(); h++) {
             for (int i = 0; i < leftOffset; i++) {
-                IO.print(" ");
+                asciiImage.append(" ");
             }
             for (int w = 0; w < image.getWidth(); w++) {
                 double brightness = getBrightnessFromRGB(image.getRGB(w, h));
-                IO.print(getCharacterFromBrightness(brightness));
+                asciiImage.append(getCharacterFromBrightness(brightness));
             }
-            IO.print("\n");
+            asciiImage.append("\n");
         }
+        if (clearTerminal) {
+            IO.print("\033[H" + asciiImage.toString());
+            System.out.flush();
+        }
+        else {
+            System.out.print(asciiImage.toString());
+        }
+    }
+
+    public static void printAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows) {
+        try {
+			videoGrabber.start();
+            double frameRate = videoGrabber.getFrameRate();
+            long frameDelay = (long) (1000 / frameRate);
+            Frame frame;
+            while ((frame = videoGrabber.grabFrame()) != null) {
+                BufferedImage image = convertFrameToBufferedImage(frame);
+
+                printAsciiImage(image, terminalColumns, terminalRows, true);
+                Thread.sleep(frameDelay);
+            }
+		} catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+    }
+
+    public static BufferedImage convertFrameToBufferedImage(Frame frame) {
+        if (frame != null && frame.image != null) {
+            return Java2DFrameUtils.toBufferedImage(frame);
+        }
+        return null;
     }
 }
