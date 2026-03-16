@@ -17,22 +17,10 @@ public class TerminalUtils {
             if (detectedTerminalSize.getColumns() != 0 && detectedTerminalSize.getRows() != 0) {
                 size = detectedTerminalSize;
             }
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             e.printStackTrace();
         }
         return size;
-    }
-
-    public static void clearTerminal() {
-        try {
-            String os = System.getProperty("os.name");
-            if (os.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                new ProcessBuilder("clear").inheritIO().start().waitFor();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

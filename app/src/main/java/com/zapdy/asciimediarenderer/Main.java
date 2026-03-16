@@ -12,33 +12,42 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 
 public class Main {
     public static void main(String[] args) {
+        // TODO: add --reversed flag
         if (args.length != 2) {
             IO.println("Incorrect number of arguments");
             System.exit(0);
         }
 
         Size size = TerminalUtils.getTerminalSize();
-        
+        File file = new File(args[1]);
         if (args[0].equals("--image") || args[0].equals("-i")) {
-            File file = new File(args[1]);
+            BufferedImage image = null;
             try {
-                BufferedImage image = ImageIO.read(file);
-                if (image == null) {
-                    IO.println("No registered ImageReader was able to read stream");
-                    return;
-                }
-                AsciiMediaRenderer.printAsciiImage(image, size.getColumns(), size.getRows()); 
-            } catch (IOException e) {
+                image = ImageIO.read(file);
+            } 
+            catch (IOException e) {
                 e.printStackTrace();
             }
+            if (image == null) {
+                IO.println("No registered ImageReader was able to read stream");
+                return;
+            }
+            AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows()); 
         }
         else if (args[0].equals("--video") || args[0].equals("-v")) {
             avutil.av_log_set_level(avutil.AV_LOG_QUIET);
 
-            File file = new File(args[1]);
             FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
             videoGrabber.setOption("loglevel", "quiet");
-            AsciiMediaRenderer.printAsciiVideo(videoGrabber, size.getColumns(), size.getRows()); 
+            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows()); 
+        }
+        else if (args[0].equals("--youtube") || args[0].equals("-y")) {
+            avutil.av_log_set_level(avutil.AV_LOG_QUIET);
+
+            String youtubeLink = args[1];
+            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youtubeLink);
+            videoGrabber.setOption("loglevel", "quiet");
+            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows()); 
         }
     }
 }
