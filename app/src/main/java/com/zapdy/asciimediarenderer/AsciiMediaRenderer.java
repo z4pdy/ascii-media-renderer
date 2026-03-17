@@ -40,11 +40,11 @@ public class AsciiMediaRenderer {
         return resizedImage;
     }
     
-    public static void printAsciiImage(BufferedImage image, int terminalColumns, int terminalRows) {
-        printAsciiImage(image, terminalColumns, terminalRows, false);
+    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows) {
+        displayAsciiImage(image, terminalColumns, terminalRows, false);
     }
 
-    public static void printAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, Boolean clearTerminal) {
+    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, Boolean clearTerminal) {
         StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
         image = resizeImage(image, terminalColumns / 2, terminalRows);
@@ -61,23 +61,23 @@ public class AsciiMediaRenderer {
         }
         if (clearTerminal) {
             IO.print("\033[H" + asciiImage.toString());
-            System.out.flush();
+            System.out.flush();        
         }
         else {
             System.out.print(asciiImage.toString());
         }
     }
 
-    public static void printAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows) {
+    public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows) {
+        TerminalUtils.clearTerminal();
         try {
 			videoGrabber.start();
             double frameRate = videoGrabber.getFrameRate();
             long frameDelay = (long) (1000 / frameRate);
             Frame frame;
             while ((frame = videoGrabber.grabFrame()) != null) {
-                BufferedImage image = convertFrameToBufferedImage(frame);
-
-                printAsciiImage(image, terminalColumns, terminalRows, true);
+                BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
+                displayAsciiImage(image, terminalColumns, terminalRows, true);
                 Thread.sleep(frameDelay);
             }
 		} catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
@@ -85,12 +85,5 @@ public class AsciiMediaRenderer {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-    }
-
-    public static BufferedImage convertFrameToBufferedImage(Frame frame) {
-        if (frame != null && frame.image != null) {
-            return Java2DFrameUtils.toBufferedImage(frame);
-        }
-        return null;
     }
 }
