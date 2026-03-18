@@ -32,8 +32,8 @@ public class AsciiMediaRenderer {
         BufferedImage resizedImage = new BufferedImage(width, height, image.getType());
         Graphics2D graphics2d = resizedImage.createGraphics();
         graphics2d.setRenderingHint(
-                RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BICUBIC
+            RenderingHints.KEY_INTERPOLATION,
+            RenderingHints.VALUE_INTERPOLATION_BICUBIC
         );
         graphics2d.drawImage(image, 0, 0, width, height, null);
         graphics2d.dispose();
@@ -64,7 +64,7 @@ public class AsciiMediaRenderer {
             System.out.flush();        
         }
         else {
-            System.out.print(asciiImage.toString());
+            IO.print(asciiImage.toString());
         }
     }
 
