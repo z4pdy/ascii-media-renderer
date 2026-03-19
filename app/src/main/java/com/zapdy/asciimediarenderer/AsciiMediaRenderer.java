@@ -3,6 +3,7 @@ package com.zapdy.asciimediarenderer;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
@@ -14,9 +15,12 @@ public class AsciiMediaRenderer {
     private static final int BOTTOM_OFFSET = 1;
     private static final char[] ASCII_CHARACTERS = " -.`-,:'_;~*\"\\/^i!rl+|I=)(t<j>f1}{vx?L7z][JcTnuysYkohF4eaV3205pbqdXPZUC69K#AwHmg8E%&S$DORNGQBMW@".toCharArray();
 
-    private static char getCharacterFromBrightness(double brightness) {
+    private static char getCharacterFromBrightness(double brightness, boolean reversed) {
         double brightnessPercentage = brightness / 255;
         int asciiCharIndex = (int) (brightnessPercentage * (ASCII_CHARACTERS.length - 1));
+        if (reversed) {
+            asciiCharIndex = (ASCII_CHARACTERS.length - 1) - asciiCharIndex; 
+        }
         return ASCII_CHARACTERS[asciiCharIndex];
     }
 
@@ -40,11 +44,11 @@ public class AsciiMediaRenderer {
         return resizedImage;
     }
     
-    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows) {
-        displayAsciiImage(image, terminalColumns, terminalRows, false);
+    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed) {
+        displayAsciiImage(image, terminalColumns, terminalRows, reversed, false);
     }
 
-    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, Boolean clearTerminal) {
+    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed, boolean clearTerminal) {
         StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
         image = resizeImage(image, terminalColumns / 2, terminalRows);
@@ -55,7 +59,7 @@ public class AsciiMediaRenderer {
             }
             for (int w = 0; w < image.getWidth(); w++) {
                 double brightness = getBrightnessFromRGB(image.getRGB(w, h));
-                asciiImage.append(getCharacterFromBrightness(brightness));
+                asciiImage.append(getCharacterFromBrightness(brightness, reversed));
             }
             asciiImage.append("\n");
         }
@@ -68,7 +72,7 @@ public class AsciiMediaRenderer {
         }
     }
 
-    public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows) {
+    public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows, boolean reversed) {
         TerminalUtils.clearTerminal();
         try {
 			videoGrabber.start();
@@ -77,12 +81,14 @@ public class AsciiMediaRenderer {
             Frame frame;
             while ((frame = videoGrabber.grabFrame()) != null) {
                 BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
-                displayAsciiImage(image, terminalColumns, terminalRows, true);
+                displayAsciiImage(image, terminalColumns, terminalRows, reversed, true);
                 Thread.sleep(frameDelay);
             }
-		} catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
+		} 
+        catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
 			e.printStackTrace();
-		} catch (InterruptedException e) {
+		} 
+        catch (InterruptedException e) {
 			e.printStackTrace();
 		}
     }

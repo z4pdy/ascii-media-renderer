@@ -1,23 +1,27 @@
 package com.zapdy.asciimediarenderer;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import javax.imageio.ImageIO;
 
-import org.jline.terminal.*;
 import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.jline.terminal.Size;
 
 public class Main {
     public static void main(String[] args) {
-        // TODO: add --reversed flag
-        if (args.length != 2) {
+        if (args.length < 2) {
             IO.println("Incorrect number of arguments");
             System.exit(1);
+        }
+
+        boolean reversed = false;
+        if (args.length == 3) {
+            if (args[2].equals("--reversed") || args[2].equals("-r")) {
+                reversed = true;
+            }
         }
 
         Size size = TerminalUtils.getTerminalSize();
@@ -34,14 +38,14 @@ public class Main {
                 IO.println("No registered ImageReader was able to read stream");
                 return;
             }
-            AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows()); 
+            AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows(), reversed); 
         }
         else if (args[0].equals("--video") || args[0].equals("-v")) {
             avutil.av_log_set_level(avutil.AV_LOG_QUIET);
 
             FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
             videoGrabber.setOption("loglevel", "quiet");
-            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows()); 
+            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
         }
         else if (args[0].equals("--youtube") || args[0].equals("-y")) {
             avutil.av_log_set_level(avutil.AV_LOG_QUIET);
@@ -54,7 +58,7 @@ public class Main {
             }
             FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
             videoGrabber.setOption("loglevel", "quiet");
-            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows()); 
+            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
         }
     }
 }
