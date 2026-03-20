@@ -25,17 +25,22 @@ public class TerminalUtils {
     }
 
     public static void clearTerminal() {
-        try {
-            String os = System.getProperty("os.name");
-            if (os.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } 
-            else {
-                new ProcessBuilder("clear").inheritIO().start().waitFor();
-            }
+        String os = System.getProperty("os.name");
+        ProcessBuilder processBuilder;
+        if (os.contains("Windows")) {
+            processBuilder = new ProcessBuilder("cmd", "/c", "cls").inheritIO();
         } 
-        catch (Exception e) {
-            e.printStackTrace();
+        else {
+            processBuilder = new ProcessBuilder("clear").inheritIO();
         }
+        try {
+			processBuilder.start().waitFor();
+		} 
+        catch (InterruptedException e) {
+			throw new RuntimeException("Terminal clear process was interrupted", e);
+		} 
+        catch (IOException e) {
+            throw new RuntimeException("I/O error occured while clearing terminal", e);
+		}
     }
 }

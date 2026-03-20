@@ -5,6 +5,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.FFmpegFrameGrabber.Exception;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
 
@@ -76,20 +77,25 @@ public class AsciiMediaRenderer {
         TerminalUtils.clearTerminal();
         try {
 			videoGrabber.start();
-            double frameRate = videoGrabber.getFrameRate();
-            long frameDelay = (long) (1000 / frameRate);
-            Frame frame;
-            while ((frame = videoGrabber.grabFrame()) != null) {
-                BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
-                displayAsciiImage(image, terminalColumns, terminalRows, reversed, true);
-                Thread.sleep(frameDelay);
-            }
+		} 
+        catch (Exception e) {
+            throw new RuntimeException("Failed to start FFmpegFrameGrabber", e);
+		}
+        double frameRate = videoGrabber.getFrameRate();
+        long frameDelay = (long) (1000 / frameRate);
+        Frame frame;
+        try {
+			while ((frame = videoGrabber.grabFrame()) != null) {
+			    BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
+			    displayAsciiImage(image, terminalColumns, terminalRows, reversed, true);
+			    Thread.sleep(frameDelay);
+			}
 		} 
         catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
-			e.printStackTrace();
+            throw new RuntimeException("Failed to grab frame", e);
 		} 
         catch (InterruptedException e) {
-			e.printStackTrace();
+            throw new RuntimeException("Error occured during frame delay sleep", e);
 		}
     }
 }

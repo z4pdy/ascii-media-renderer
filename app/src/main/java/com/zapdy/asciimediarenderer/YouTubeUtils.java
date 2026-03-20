@@ -7,21 +7,41 @@ import java.io.InputStreamReader;
 public class YouTubeUtils {
     public static String getYouTubeDirectVideoStreamUrl(String youtubeUrl) {
         String youTubeDirectVideoStreamUrl = "";
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                "yt-dlp", "--js-runtimes", "node", "-g", "-f", "bv", youtubeUrl
-            );            
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            youTubeDirectVideoStreamUrl = reader.readLine().toString();
-            process.waitFor();
+        ProcessBuilder processBuilder = new ProcessBuilder(
+            "yt-dlp", 
+            "--remote-components", "ejs:github", 
+            "-g", 
+            "-f", "bv", 
+            youtubeUrl
+        );            
+        processBuilder.redirectErrorStream(true);
+        Process process;
+		try {
+			process = processBuilder.start();
 		} 
         catch (IOException e) {
-			e.printStackTrace();
+            throw new RuntimeException("Failed to start yt-dlp process", e);
+		}
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        String line;
+        try {
+			while ((line = reader.readLine()) != null) {
+			    if (line.startsWith("http")) {
+			        youTubeDirectVideoStreamUrl = line;
+			        break;
+			    }
+			}
+		} 
+        catch (IOException e) {
+			throw new RuntimeException("Failed to read yt-dlp process output", e);
+		}
+
+        try {
+			process.waitFor();
 		} 
         catch (InterruptedException e) {
-			e.printStackTrace();
+			throw new RuntimeException("yt-dlp process was interrupted", e);
 		}
         return youTubeDirectVideoStreamUrl;
     }

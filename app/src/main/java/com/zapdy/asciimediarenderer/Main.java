@@ -32,11 +32,10 @@ public class Main {
                 image = ImageIO.read(file);
             } 
             catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Failed to open the image file", e);
             }
             if (image == null) {
-                IO.println("No registered ImageReader was able to read stream");
-                return;
+                throw new RuntimeException("No registered ImageReader was able to read stream");
             }
             AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows(), reversed); 
         }
