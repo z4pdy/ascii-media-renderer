@@ -11,7 +11,28 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.jline.terminal.Size;
 
 public class Main {
+    private static void printUsage() {
+        String usage = """
+        Usage: AsciiMediaRenderer [mode] <file-path | url> [flags]
+
+        --help, -h              Show this help message
+
+        [mode] 
+            --image, -i         Render an image as ASCII art
+            --video, -v         Render an video as ASCII art
+            --youtube, -y       Render an YouTube video as ASCII art
+
+        [flags]
+            --reversed, -r      Reverse brightness
+        """;
+        IO.println(usage);
+    }
     public static void main(String[] args) {
+        if (args.length == 0 || args[0].equals("--help") || args[0].equals("-h")) {
+            printUsage();
+            System.exit(0);
+        }
+
         if (args.length < 2) {
             IO.println("Incorrect number of arguments");
             System.exit(1);
