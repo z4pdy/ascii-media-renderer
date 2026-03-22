@@ -52,7 +52,7 @@ public class AsciiMediaRenderer {
     public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed, boolean clearTerminal) {
         StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
-        image = resizeImage(image, terminalColumns / 2, terminalRows);
+        image = resizeImage(image, terminalColumns, terminalRows);
         int leftOffset = (terminalColumns - image.getWidth()) / 2;
         for (int h = 0; h < image.getHeight(); h++) {
             for (int i = 0; i < leftOffset; i++) {

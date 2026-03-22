@@ -11,7 +11,7 @@ public class YouTubeUtils {
             "yt-dlp", 
             "--remote-components", "ejs:github", 
             "-g", 
-            "-f", "bv", 
+            "-f", "worstvideo", 
             youtubeUrl
         );            
         processBuilder.redirectErrorStream(true);
