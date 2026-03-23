@@ -45,4 +45,45 @@ public class YouTubeUtils {
 		}
         return youTubeDirectVideoStreamUrl;
     }
+    public static String getYoutubeUrlFromSearchQuery(String searchQuery) {
+        String youTubeUrl = "";
+        ProcessBuilder processBuilder = new ProcessBuilder(
+            "yt-dlp", 
+            "--remote-components", "ejs:github", 
+            "ytsearch1:".concat(searchQuery), 
+            "--print", "webpage_url" 
+        );            
+        processBuilder.redirectErrorStream(true);
+        Process process;
+		try {
+			process = processBuilder.start();
+		} 
+        catch (IOException e) {
+            throw new RuntimeException("Failed to start yt-dlp process", e);
+		}
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        String line;
+        try {
+			while ((line = reader.readLine()) != null) {
+			    if (line.startsWith("http")) {
+			        youTubeUrl = line;
+			        break;
+			    }
+			}
+		} 
+        catch (IOException e) {
+			throw new RuntimeException("Failed to read yt-dlp process output", e);
+		}
+
+        try {
+			process.waitFor();
+		} 
+        catch (InterruptedException e) {
+			throw new RuntimeException("yt-dlp process was interrupted", e);
+		}
+
+        return youTubeUrl;
+    } 
 }

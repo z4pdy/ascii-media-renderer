@@ -18,9 +18,10 @@ public class Main {
         --help, -h              Show this help message
 
         [mode] 
-            --image, -i         Render an image as ASCII art
-            --video, -v         Render an video as ASCII art
-            --youtube, -y       Render an YouTube video as ASCII art
+            --image, -i                 Render an image as ASCII art
+            --video, -v                 Render an video as ASCII art
+            --youtube, -y               Render an YouTube video as ASCII art
+            --youtube-search, -ys       Render an searched YouTube video as ASCII art
 
         [flags]
             --reversed, -r      Reverse brightness
@@ -72,6 +73,24 @@ public class Main {
             avutil.av_log_set_level(avutil.AV_LOG_QUIET);
 
             String youtubeUrl = args[1];
+            String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youtubeUrl);
+            if (youTubeDirectVideoStreamUrl.isEmpty()){ 
+                IO.println("Failed to fetch YouTube direct video stream url.");
+                System.exit(1);
+            }
+            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
+            videoGrabber.setOption("loglevel", "quiet");
+            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
+        }
+        else if (args[0].equals("--youtube-search") || args[0].equals("-ys")) {
+            avutil.av_log_set_level(avutil.AV_LOG_QUIET);
+
+            String youtubeSearchQuery = args[1];
+            String youtubeUrl = YouTubeUtils.getYoutubeUrlFromSearchQuery(youtubeSearchQuery);
+            if (youtubeUrl.isEmpty()) {
+                IO.println("Failed to fetch YouTube Url from search query.");
+                System.exit(1);
+            }
             String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youtubeUrl);
             if (youTubeDirectVideoStreamUrl.isEmpty()){ 
                 IO.println("Failed to fetch YouTube direct video stream url.");
