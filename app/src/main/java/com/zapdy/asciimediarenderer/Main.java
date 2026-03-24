@@ -29,6 +29,30 @@ public class Main {
         IO.println(usage);
     }
 
+
+    private static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, Size size, boolean reversed) {
+        avutil.av_log_set_level(avutil.AV_LOG_QUIET);
+
+        videoGrabber.setOption("loglevel", "quiet");
+        AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
+    }
+
+    private static void displayAsciiVideoFromFile(File file, Size size, boolean reversed) {
+        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
+        displayAsciiVideo(videoGrabber, size, reversed);
+    }
+
+    private static void displayAsciiVideoFromYouTube(String youtubeUrl, Size size, boolean reversed) {
+        String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youtubeUrl);
+        if (youTubeDirectVideoStreamUrl.isEmpty()){ 
+            IO.println("Failed to fetch YouTube direct video stream url.");
+            System.exit(1);
+        }
+
+        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
+        displayAsciiVideo(videoGrabber, size, reversed);
+    }
+
     public static void main(String[] args) {
         if (args.length == 0 || args[0].equals("--help") || args[0].equals("-h")) {
             printUsage();
@@ -63,42 +87,26 @@ public class Main {
             AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows(), reversed); 
         }
         else if (args[0].equals("--video") || args[0].equals("-v")) {
-            avutil.av_log_set_level(avutil.AV_LOG_QUIET);
-
-            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
-            videoGrabber.setOption("loglevel", "quiet");
-            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
+            displayAsciiVideoFromFile(file, size, reversed);
         }
         else if (args[0].equals("--youtube") || args[0].equals("-y")) {
-            avutil.av_log_set_level(avutil.AV_LOG_QUIET);
-
             String youtubeUrl = args[1];
-            String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youtubeUrl);
-            if (youTubeDirectVideoStreamUrl.isEmpty()){ 
-                IO.println("Failed to fetch YouTube direct video stream url.");
-                System.exit(1);
-            }
-            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
-            videoGrabber.setOption("loglevel", "quiet");
-            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
+            displayAsciiVideoFromYouTube(youtubeUrl, size, reversed);
         }
         else if (args[0].equals("--youtube-search") || args[0].equals("-ys")) {
-            avutil.av_log_set_level(avutil.AV_LOG_QUIET);
-
             String youtubeSearchQuery = args[1];
             String youtubeUrl = YouTubeUtils.getYoutubeUrlFromSearchQuery(youtubeSearchQuery);
             if (youtubeUrl.isEmpty()) {
                 IO.println("Failed to fetch YouTube Url from search query.");
                 System.exit(1);
             }
-            String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youtubeUrl);
-            if (youTubeDirectVideoStreamUrl.isEmpty()){ 
-                IO.println("Failed to fetch YouTube direct video stream url.");
-                System.exit(1);
-            }
-            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
-            videoGrabber.setOption("loglevel", "quiet");
-            AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
+            displayAsciiVideoFromYouTube(youtubeUrl, size, reversed);
         }
+        else {
+            IO.println("Unknown mode: ".concat(args[0]));
+            printUsage();
+            System.exit(0);
+        }
+
     }
 }
