@@ -3,6 +3,7 @@ package com.zapdy.asciimediarenderer;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameGrabber.Exception;
@@ -45,6 +46,12 @@ public class AsciiMediaRenderer {
         return resizedImage;
     }
     
+    private static BufferedImage adjustImageContrast(BufferedImage image) {
+        RescaleOp contrast = new RescaleOp(1.4f, 10f, null);
+        BufferedImage contrastedImage = contrast.filter(image, null); 
+        return contrastedImage; 
+    }
+
     public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed) {
         displayAsciiImage(image, terminalColumns, terminalRows, reversed, false);
     }
@@ -53,6 +60,7 @@ public class AsciiMediaRenderer {
         StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
         image = resizeImage(image, terminalColumns, terminalRows);
+        image = adjustImageContrast(image);
         int leftOffset = (terminalColumns - image.getWidth()) / 2;
         for (int h = 0; h < image.getHeight(); h++) {
             for (int i = 0; i < leftOffset; i++) {
