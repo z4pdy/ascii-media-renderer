@@ -13,15 +13,15 @@ import org.jline.terminal.Size;
 public class Main {
     private static void printUsage() {
         String usage = """
-        Usage: AsciiMediaRenderer [mode] <file-path | url> [flags]
+        Usage: ascii-media-renderer [mode] <file-path | url> [flags]
 
         --help, -h              Show this help message
 
         [mode] 
             --image, -i                 Render an image as ASCII art
-            --video, -v                 Render an video as ASCII art
-            --youtube, -y               Render an YouTube video as ASCII art
-            --youtube-search, -ys       Render an searched YouTube video as ASCII art
+            --video, -v                 Render a video as ASCII art
+            --youtube, -y               Render a YouTube video as ASCII art
+            --youtube-search, -ys       Render a searched YouTube video as ASCII art
 
         [flags]
             --reversed, -r      Reverse brightness

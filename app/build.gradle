@@ -39,6 +39,7 @@ application {
     // Define the main class for the application.
     mainClass = 'com.zapdy.asciimediarenderer.Main'
     applicationDefaultJvmArgs = ["--enable-native-access=ALL-UNNAMED"]
+    applicationName = 'ascii-media-renderer'
 }
 
 tasks.named('test') {
