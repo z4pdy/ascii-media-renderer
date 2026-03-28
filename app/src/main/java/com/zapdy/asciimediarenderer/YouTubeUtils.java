@@ -10,6 +10,7 @@ public class YouTubeUtils {
         ProcessBuilder processBuilder = new ProcessBuilder(
             "yt-dlp", 
             "--remote-components", "ejs:github", 
+            "--js-runtimes", "node",
             "-g", 
             "-f", "worstvideo", 
             youtubeUrl
@@ -45,11 +46,13 @@ public class YouTubeUtils {
 		}
         return youTubeDirectVideoStreamUrl;
     }
+
     public static String getYoutubeUrlFromSearchQuery(String searchQuery) {
         String youTubeUrl = "";
         ProcessBuilder processBuilder = new ProcessBuilder(
             "yt-dlp", 
             "--remote-components", "ejs:github", 
+            "--js-runtimes", "node",
             "ytsearch1:".concat(searchQuery), 
             "--print", "webpage_url" 
         );            
