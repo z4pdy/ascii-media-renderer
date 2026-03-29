@@ -13,7 +13,7 @@ CLI tool for rendering images and videos as ASCII in terminal.
 * 🔎 YouTube search to ASCII
 
 ## 📦 Installation
-```bash id="0whp2z"
+```bash
 git clone https://github.com/zapdy/ascii-media-renderer.git 
 cd ascii-media-renderer 
 ./gradlew installDist
@@ -21,7 +21,7 @@ cd ascii-media-renderer
 ```
 
 ## 🚀 Usage
-```bash id="4cz2yf"
+```bash
 ascii-media-renderer [mode] <file-path | url> [flags]
 ```
 
@@ -42,3 +42,22 @@ ascii-media-renderer [mode] <file-path | url> [flags]
 | Option         | Description |
 | -------------- | ------------|
 | `--help`, `-h` | Show help   |
+
+## 📚 Examples
+
+### 🎨 Image to ASCII
+```bash
+ascii-media-renderer --image image.png
+```
+### 🎬 Video to ASCII
+```bash
+ascii-media-renderer --video video.mp4
+```
+### 📺 YouTube URL to ASCII
+```bash
+ascii-media-renderer --youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+### 🔎 YouTube Search to ASCII
+```bash
+ascii-media-renderer --youtube-search "ice cube - it was a good day"
+```
