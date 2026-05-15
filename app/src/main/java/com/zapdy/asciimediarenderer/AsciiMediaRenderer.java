@@ -9,6 +9,7 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameGrabber.Exception;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
+import java.awt.Dimension;
 
 public class AsciiMediaRenderer {
     private static final double RED_WEIGHT = 0.21;
@@ -16,6 +17,7 @@ public class AsciiMediaRenderer {
     private static final double BLUE_WEIGHT = 0.07;
     private static final int BOTTOM_OFFSET = 1;
     private static final char[] ASCII_CHARACTERS = " -.`-,:'_;~*\"\\/^i!rl+|I=)(t<j>f1}{vx?L7z][JcTnuysYkohF4eaV3205pbqdXPZUC69K#AwHmg8E%&S$DORNGQBMW@".toCharArray();
+    private static final double CHAR_RATIO = 0.5;
 
     private static char getCharacterFromBrightness(double brightness, boolean reversed) {
         double brightnessPercentage = brightness / 255;
@@ -59,7 +61,8 @@ public class AsciiMediaRenderer {
     public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed, boolean clearTerminal) {
         StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
-        image = resizeImage(image, terminalColumns, terminalRows);
+        Dimension newImageSize = calculateImageSize(image, terminalColumns, terminalRows);
+        image = resizeImage(image, newImageSize.width, newImageSize.height);
         image = adjustImageContrast(image);
         int leftOffset = (terminalColumns - image.getWidth()) / 2;
         for (int h = 0; h < image.getHeight(); h++) {
@@ -81,7 +84,23 @@ public class AsciiMediaRenderer {
         }
     }
 
-    public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows, boolean reversed) {
+    private static Dimension calculateImageSize(BufferedImage image, int width, int height) {
+        double ratio = ((double) image.getWidth()) / image.getHeight();
+        ratio /= CHAR_RATIO;
+        int newWidth, newHeight;
+
+        newHeight = height;
+        newWidth = (int) (newHeight * ratio);
+
+        if (newWidth > width) {
+            newWidth = width;
+            newHeight = (int) (newWidth / ratio); 
+        }
+         
+        return new Dimension(newWidth, newHeight);
+	}
+
+	public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows, boolean reversed) {
         TerminalUtils.clearTerminal();
         try {
 			videoGrabber.start();
