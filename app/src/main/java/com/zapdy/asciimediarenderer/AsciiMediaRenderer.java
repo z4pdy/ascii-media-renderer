@@ -15,7 +15,7 @@ public class AsciiMediaRenderer {
     private static final double RED_WEIGHT = 0.21;
     private static final double GREEN_WEIGHT = 0.72;
     private static final double BLUE_WEIGHT = 0.07;
-    private static final int BOTTOM_OFFSET = 1;
+    private static final int BOTTOM_OFFSET = 2;
     private static final char[] ASCII_CHARACTERS = " -.`-,:'_;~*\"\\/^i!rl+|I=)(t<j>f1}{vx?L7z][JcTnuysYkohF4eaV3205pbqdXPZUC69K#AwHmg8E%&S$DORNGQBMW@".toCharArray();
     private static final double CHAR_RATIO = 0.5;
 
@@ -29,6 +29,10 @@ public class AsciiMediaRenderer {
     }
 
     private static double getBrightnessFromRGB(int rgb) {
+        final int a = (rgb >> 24) & 0xFF;
+        if (a == 0) {
+            return -1; // transparent
+        }
         final int r = (rgb >> 16) & 0xFF;
         final int g = (rgb >> 8) & 0xFF;
         final int b = rgb & 0xFF;
@@ -37,7 +41,7 @@ public class AsciiMediaRenderer {
     }
 
     private static BufferedImage resizeImage(BufferedImage image, int width, int height) {
-        BufferedImage resizedImage = new BufferedImage(width, height, image.getType());
+        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics2d = resizedImage.createGraphics();
         graphics2d.setRenderingHint(
             RenderingHints.KEY_INTERPOLATION,
@@ -71,6 +75,10 @@ public class AsciiMediaRenderer {
             }
             for (int w = 0; w < image.getWidth(); w++) {
                 double brightness = getBrightnessFromRGB(image.getRGB(w, h));
+                if (brightness == -1) {
+                    asciiImage.append(" ");
+                    continue;
+                }
                 asciiImage.append(getCharacterFromBrightness(brightness, reversed));
             }
             asciiImage.append("\n");
