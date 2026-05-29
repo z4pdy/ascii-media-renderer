@@ -61,3 +61,20 @@ ascii-media-renderer --youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```bash
 ascii-media-renderer --youtube-search "ice cube - it was a good day"
 ```
+### 🎞️ Showcase
+<p align="center">
+    <img src="docs/images/skull.png" width=800><br/>
+    <i>Image</i>
+</p>
+<p align="center">
+    <img src="docs/videos/basketball.webp" width=800><br/>
+    <i>Video</i>
+</p>
+<p align="center">
+    <img src="docs/videos/stickman.webp" width=800><br/>
+    <i>YouTube video</i>
+</p>
+<p align="center">
+    <img src="docs/videos/cant_tell_me_nothing.webp" width=800><br/>
+    <i>YouTube video (via search)</i>
+</p>
