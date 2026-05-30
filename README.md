@@ -44,37 +44,24 @@ ascii-media-renderer [mode] <file-path | url> [flags]
 | `--help`, `-h` | Show help   |
 
 ## 📚 Examples
-
+> **Note:** The quality of the examples was reduced to meet GitHub's requirements
 ### 🎨 Image to ASCII
 ```bash
-ascii-media-renderer --image image.png
+ascii-media-renderer --image skull.png
 ```
+<img src="docs/images/skull.png" width=800><br/>
 ### 🎬 Video to ASCII
 ```bash
-ascii-media-renderer --video video.mp4
+ascii-media-renderer --video basketball.mp4
 ```
+<img src="docs/videos/basketball.webp" width=800><br/>
 ### 📺 YouTube URL to ASCII
 ```bash
-ascii-media-renderer --youtube "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ascii-media-renderer --youtube "https://www.youtube.com/watch?v=cDoo53YgQhY"
 ```
+<img src="docs/videos/stickman.webp" width=800><br/>
 ### 🔎 YouTube Search to ASCII
 ```bash
-ascii-media-renderer --youtube-search "ice cube - it was a good day"
+ascii-media-renderer --youtube-search "kanye west - cant tell me nothing"
 ```
-### 🎞️ Showcase
-<p align="center">
-    <img src="docs/images/skull.png" width=800><br/>
-    <i>Image</i>
-</p>
-<p align="center">
-    <img src="docs/videos/basketball.webp" width=800><br/>
-    <i>Video</i>
-</p>
-<p align="center">
-    <img src="docs/videos/stickman.webp" width=800><br/>
-    <i>YouTube video</i>
-</p>
-<p align="center">
-    <img src="docs/videos/cant_tell_me_nothing.webp" width=800><br/>
-    <i>YouTube video (via search)</i>
-</p>
+<img src="docs/videos/cant_tell_me_nothing.webp" width=800><br/>
