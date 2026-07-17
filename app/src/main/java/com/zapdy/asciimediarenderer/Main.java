@@ -24,33 +24,29 @@ public class Main {
             --youtube-search, -ys       Render a searched YouTube video as ASCII art
 
         [flags]
-            --reversed, -r      Reverse brightness
+            --reversed, -r                  Reverse brightness
+            --transparent-background, -t    Transparent background
         """;
         IO.println(usage);
     }
 
 
-    private static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, Size size, boolean reversed) {
+    private static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, Size size, boolean reversed, boolean transparentBackground) {
         avutil.av_log_set_level(avutil.AV_LOG_QUIET);
 
         videoGrabber.setOption("loglevel", "quiet");
-        AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed); 
+        AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed, transparentBackground); 
     }
 
-    private static void displayAsciiVideoFromFile(File file, Size size, boolean reversed) {
+    private static void displayAsciiVideoFromFile(File file, Size size, boolean reversed, boolean transparentBackground) {
         FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
-        displayAsciiVideo(videoGrabber, size, reversed);
+        displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
     }
 
-    private static void displayAsciiVideoFromYouTube(String youtubeUrl, Size size, boolean reversed) {
-        String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youtubeUrl);
-        if (youTubeDirectVideoStreamUrl.isEmpty()){ 
-            IO.println("Failed to fetch YouTube direct video stream url.");
-            System.exit(1);
-        }
-
+    private static void displayAsciiVideoFromYouTube(String youTubeUrl, Size size, boolean reversed, boolean transparentBackground) {
+        String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youTubeUrl);
         FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
-        displayAsciiVideo(videoGrabber, size, reversed);
+        displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
     }
 
     public static void main(String[] args) {
@@ -65,48 +61,58 @@ public class Main {
         }
 
         boolean reversed = false;
-        if (args.length == 3) {
-            if (args[2].equals("--reversed") || args[2].equals("-r")) {
-                reversed = true;
+        boolean transparentBackground = false;
+        
+        if (args.length >= 3) {
+            for (int i = 2; i < args.length; i++) {
+                switch (args[i]) {
+                    case "-r", "--reversed" ->
+                        reversed = true;
+                    case "-t", "--transparent-background" ->
+                        transparentBackground = true;
+                    default -> {
+                        IO.println("Unknown option: " + args[i]);
+                        System.exit(1);
+                    }
+                }
             }
         }
 
         Size size = TerminalUtils.getTerminalSize();
-        File file = new File(args[1]);
-        if (args[0].equals("--image") || args[0].equals("-i")) {
-            BufferedImage image = null;
-            try {
-                image = ImageIO.read(file);
-            } 
-            catch (IOException e) {
-                throw new RuntimeException("Failed to open the image file", e);
-            }
-            if (image == null) {
-                throw new RuntimeException("No registered ImageReader was able to read stream");
-            }
-            AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows(), reversed); 
-        }
-        else if (args[0].equals("--video") || args[0].equals("-v")) {
-            displayAsciiVideoFromFile(file, size, reversed);
-        }
-        else if (args[0].equals("--youtube") || args[0].equals("-y")) {
-            String youtubeUrl = args[1];
-            displayAsciiVideoFromYouTube(youtubeUrl, size, reversed);
-        }
-        else if (args[0].equals("--youtube-search") || args[0].equals("-ys")) {
-            String youtubeSearchQuery = args[1];
-            String youtubeUrl = YouTubeUtils.getYoutubeUrlFromSearchQuery(youtubeSearchQuery);
-            if (youtubeUrl.isEmpty()) {
-                IO.println("Failed to fetch YouTube Url from search query.");
-                System.exit(1);
-            }
-            displayAsciiVideoFromYouTube(youtubeUrl, size, reversed);
-        }
-        else {
-            IO.println("Unknown mode: ".concat(args[0]));
-            printUsage();
-            System.exit(0);
-        }
 
+        switch (args[0]) {
+            case "-i", "--image" -> {
+                File file = new File(args[1]);
+                BufferedImage image = null;
+                try {
+                    image = ImageIO.read(file);
+                } 
+                catch (IOException e) {
+                    throw new RuntimeException("Failed to open the image file", e);
+                }
+                if (image == null) {
+                    throw new RuntimeException("No registered ImageReader was able to read stream");
+                }
+                AsciiMediaRenderer.displayAsciiImage(image, size.getColumns(), size.getRows(), reversed, transparentBackground); 
+            }
+            case "-v" , "--video" -> {
+                File file = new File(args[1]);
+                displayAsciiVideoFromFile(file, size, reversed, transparentBackground);
+            }
+            case "-y" , "--youtube" -> {
+                String youTubeUrl = args[1];
+                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground);
+            }
+            case "-ys" , "--youtube-search" -> {
+                String youTubeSearchQuery = args[1];
+                String youTubeUrl = YouTubeUtils.getYouTubeUrlFromSearchQuery(youTubeSearchQuery);
+                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground);
+            }
+            default -> {
+                IO.println("Unknown mode: ".concat(args[0]));
+                printUsage();
+                System.exit(0);
+            }
+        }
     }
 }

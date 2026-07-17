@@ -19,16 +19,32 @@ public class AsciiMediaRenderer {
     private static final char[] ASCII_CHARACTERS = " -.`-,:'_;~*\"\\/^i!rl+|I=)(t<j>f1}{vx?L7z][JcTnuysYkohF4eaV3205pbqdXPZUC69K#AwHmg8E%&S$DORNGQBMW@".toCharArray();
     private static final double CHAR_RATIO = 0.5;
 
-    private static char getCharacterFromBrightness(double brightness, boolean reversed) {
-        double brightnessPercentage = brightness / 255;
+    private static char getCharacterFromBrightness(int brightness, boolean reversed) {
+        double brightnessPercentage = ((double) brightness) / 255;
         int asciiCharIndex = (int) (brightnessPercentage * (ASCII_CHARACTERS.length - 1));
         if (reversed) {
             asciiCharIndex = (ASCII_CHARACTERS.length - 1) - asciiCharIndex; 
         }
         return ASCII_CHARACTERS[asciiCharIndex];
     }
+    
+    private static char getBackgroundCharacter(BufferedImage image, boolean reversed) {
+        char backgroundChar = ' ';
+        int topLeftBrightness = getBrightnessFromRGB(image.getRGB(0, 0));
+        int topRightBrightness = getBrightnessFromRGB(image.getRGB(image.getWidth() - 1, 0));
+        int bottomLeftBrightness = getBrightnessFromRGB(image.getRGB(0, image.getHeight() - 1));
+        int bottomRightBrightness = getBrightnessFromRGB(image.getRGB(image.getWidth() - 1, image.getHeight() - 1));
 
-    private static double getBrightnessFromRGB(int rgb) {
+        if (topLeftBrightness == topRightBrightness &&
+            topLeftBrightness == bottomLeftBrightness &&
+            topLeftBrightness == bottomRightBrightness) {
+
+            backgroundChar = getCharacterFromBrightness(topLeftBrightness, reversed);
+        }
+        return backgroundChar;
+    } 
+
+    private static int getBrightnessFromRGB(int rgb) {
         final int a = (rgb >> 24) & 0xFF;
         if (a == 0) {
             return -1; // transparent
@@ -37,7 +53,7 @@ public class AsciiMediaRenderer {
         final int g = (rgb >> 8) & 0xFF;
         final int b = rgb & 0xFF;
 
-        return (RED_WEIGHT * r) + (GREEN_WEIGHT * g) + (BLUE_WEIGHT * b);
+        return (int) ((RED_WEIGHT * r) + (GREEN_WEIGHT * g) + (BLUE_WEIGHT * b));
     }
 
     private static BufferedImage resizeImage(BufferedImage image, int width, int height) {
@@ -58,38 +74,36 @@ public class AsciiMediaRenderer {
         return contrastedImage; 
     }
 
-    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed) {
-        displayAsciiImage(image, terminalColumns, terminalRows, reversed, false);
-    }
-
-    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed, boolean clearTerminal) {
+    public static void displayAsciiImage(BufferedImage image, int terminalColumns, int terminalRows, boolean reversed, boolean transparentBackground) {
         StringBuilder asciiImage = new StringBuilder();
         terminalRows = terminalRows - BOTTOM_OFFSET;
         Dimension newImageSize = calculateImageSize(image, terminalColumns, terminalRows);
         image = resizeImage(image, newImageSize.width, newImageSize.height);
         image = adjustImageContrast(image);
+        char backgroundChar = ' ';
+        if (transparentBackground) {
+            backgroundChar = getBackgroundCharacter(image, reversed);
+        }
         int leftOffset = (terminalColumns - image.getWidth()) / 2;
         for (int h = 0; h < image.getHeight(); h++) {
             for (int i = 0; i < leftOffset; i++) {
                 asciiImage.append(" ");
             }
             for (int w = 0; w < image.getWidth(); w++) {
-                double brightness = getBrightnessFromRGB(image.getRGB(w, h));
+                int brightness = getBrightnessFromRGB(image.getRGB(w, h));
                 if (brightness == -1) {
                     asciiImage.append(" ");
                     continue;
                 }
-                asciiImage.append(getCharacterFromBrightness(brightness, reversed));
+                char character = getCharacterFromBrightness(brightness, reversed);
+                if (transparentBackground && backgroundChar != ' ' && backgroundChar == character) {
+                    character = ' ';
+                }
+                asciiImage.append(character);
             }
             asciiImage.append("\n");
         }
-        if (clearTerminal) {
-            IO.print("\033[H" + asciiImage.toString());
-            System.out.flush();        
-        }
-        else {
-            IO.print(asciiImage.toString());
-        }
+        IO.print(asciiImage.toString());
     }
 
     private static Dimension calculateImageSize(BufferedImage image, int width, int height) {
@@ -108,7 +122,7 @@ public class AsciiMediaRenderer {
         return new Dimension(newWidth, newHeight);
 	}
 
-	public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows, boolean reversed) {
+	public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows, boolean reversed, boolean transparentBackground) {
         TerminalUtils.clearTerminal();
         try {
 			videoGrabber.start();
@@ -122,7 +136,11 @@ public class AsciiMediaRenderer {
         try {
 			while ((frame = videoGrabber.grabFrame()) != null) {
 			    BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
-			    displayAsciiImage(image, terminalColumns, terminalRows, reversed, true);
+
+                IO.print("\033[H");
+			    displayAsciiImage(image, terminalColumns, terminalRows, reversed, transparentBackground);
+                System.out.flush();
+
 			    Thread.sleep(frameDelay);
 			}
 		} 

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class YouTubeUtils {
-    public static String getYouTubeDirectVideoStreamUrl(String youtubeUrl) {
+    public static String getYouTubeDirectVideoStreamUrl(String youTubeUrl) {
         String youTubeDirectVideoStreamUrl = "";
         ProcessBuilder processBuilder = new ProcessBuilder(
             "yt-dlp", 
@@ -13,7 +13,7 @@ public class YouTubeUtils {
             "--js-runtimes", "node",
             "-g", 
             "-f", "worstvideo", 
-            youtubeUrl
+            youTubeUrl
         );            
         processBuilder.redirectErrorStream(true);
         Process process;
@@ -44,10 +44,15 @@ public class YouTubeUtils {
         catch (InterruptedException e) {
 			throw new RuntimeException("yt-dlp process was interrupted", e);
 		}
+
+        if (youTubeDirectVideoStreamUrl.isEmpty()){ 
+            throw new RuntimeException("Failed to fetch YouTube direct video stream url.");
+        }
+
         return youTubeDirectVideoStreamUrl;
     }
 
-    public static String getYoutubeUrlFromSearchQuery(String searchQuery) {
+    public static String getYouTubeUrlFromSearchQuery(String searchQuery) {
         String youTubeUrl = "";
         ProcessBuilder processBuilder = new ProcessBuilder(
             "yt-dlp", 
@@ -86,6 +91,10 @@ public class YouTubeUtils {
         catch (InterruptedException e) {
 			throw new RuntimeException("yt-dlp process was interrupted", e);
 		}
+    
+        if (youTubeUrl.isEmpty()) {
+            throw new RuntimeException("Failed to fetch YouTube Url from search query.");
+        }
 
         return youTubeUrl;
     } 
