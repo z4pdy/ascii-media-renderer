@@ -130,18 +130,33 @@ public class AsciiMediaRenderer {
         catch (Exception e) {
             throw new RuntimeException("Failed to start FFmpegFrameGrabber", e);
 		}
-        double frameRate = videoGrabber.getFrameRate();
-        long frameDelay = (long) (1000 / frameRate);
+        long firstTimestamp = -1;
+        long playbackStart = -1;
         Frame frame;
         try {
 			while ((frame = videoGrabber.grabFrame()) != null) {
+                long frameTimestamp = videoGrabber.getTimestamp();
+
+                if (firstTimestamp == -1) {
+                    firstTimestamp = frameTimestamp;
+                    playbackStart = System.nanoTime();
+                }
+
 			    BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
 
                 IO.print("\033[H");
 			    displayAsciiImage(image, terminalColumns, terminalRows, reversed, transparentBackground);
                 System.out.flush();
 
-			    Thread.sleep(frameDelay);
+                long actuallTimestamp = (System.nanoTime() - playbackStart) / 1000;
+                long delay = ((frameTimestamp - firstTimestamp) - actuallTimestamp) / 1000;
+                if (delay < -500) {
+                    throw new RuntimeException("Terminal resolution is too high for real-time ASCII playback");
+                }
+                else if (delay < 0) {
+                    delay = 0;
+                }
+			    Thread.sleep(delay);
 			}
 		} 
         catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
