@@ -1,5 +1,7 @@
 package com.zapdy.asciimediarenderer;
 
+import org.bytedeco.ffmpeg.global.avutil;
+
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameGrabber.Exception;
 import org.bytedeco.javacv.Frame;
@@ -42,7 +44,6 @@ public class AsciiMediaRenderer {
         IO.print(asciiImage.toString());
     }
 
-
 	public static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, int terminalColumns, int terminalRows, boolean reversed, boolean transparentBackground) {
         TerminalUtils.clearTerminal();
         try {
@@ -69,8 +70,8 @@ public class AsciiMediaRenderer {
 			    displayAsciiImage(image, terminalColumns, terminalRows, reversed, transparentBackground);
                 System.out.flush();
 
-                long actuallTimestamp = (System.nanoTime() - playbackStart) / 1000;
-                long delay = ((frameTimestamp - firstTimestamp) - actuallTimestamp) / 1000;
+                long actualTimestamp = (System.nanoTime() - playbackStart) / 1000;
+                long delay = ((frameTimestamp - firstTimestamp) - actualTimestamp) / 1000;
                 if (delay < -500) {
                     throw new RuntimeException("Terminal resolution is too high for real-time ASCII playback");
                 }
@@ -86,5 +87,77 @@ public class AsciiMediaRenderer {
         catch (InterruptedException e) {
             throw new RuntimeException("Error occured during frame delay sleep", e);
 		}
+    }
+
+	public static void playAsciiVideo(YouTubeDirectStreamUrls streamUrls, int terminalColumns, int terminalRows, boolean reversed, boolean transparentBackground) {
+        avutil.av_log_set_level(avutil.AV_LOG_QUIET);
+        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(streamUrls.videoUrl());
+
+        AudioPlayer audioPlayer = new AudioPlayer(streamUrls.audioUrl());
+        audioPlayer.prepare();
+        TerminalUtils.clearTerminal();
+        try {
+			videoGrabber.start();
+		} 
+        catch (Exception e) {
+            try {
+                videoGrabber.close();
+            } 
+            catch (org.bytedeco.javacv.FrameGrabber.Exception e2) {
+                e2.printStackTrace();
+            }
+
+            throw new RuntimeException("Failed to start FFmpegFrameGrabber", e);
+		}
+        long firstTimestamp = -1;
+        long playbackStart = -1;
+        Frame frame;
+        try {
+			while ((frame = videoGrabber.grabFrame()) != null) {
+                long frameTimestamp = videoGrabber.getTimestamp();
+
+                if (firstTimestamp == -1) {
+                    firstTimestamp = frameTimestamp;
+                    playbackStart = System.nanoTime();
+
+                    Thread audioThread = new Thread(() -> {
+                        audioPlayer.play();
+                    });
+                    audioThread.start();
+                }
+
+			    BufferedImage image = Java2DFrameUtils.toBufferedImage(frame);
+
+                IO.print("\033[H");
+			    displayAsciiImage(image, terminalColumns, terminalRows, reversed, transparentBackground);
+                System.out.flush();
+
+                long actualTimestamp = (System.nanoTime() - playbackStart) / 1000;
+                long delay = ((frameTimestamp - firstTimestamp) - actualTimestamp) / 1000;
+                if (delay < -500) {
+                    throw new RuntimeException("Terminal resolution is too high for real-time ASCII playback");
+                }
+                else if (delay < 0) {
+                    delay = 0;
+                }
+			    Thread.sleep(delay);
+			}
+		} 
+        catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
+            throw new RuntimeException("Failed to grab frame", e);
+		} 
+        catch (InterruptedException e) {
+            throw new RuntimeException("Error occured during frame delay sleep", e);
+		}
+        finally {
+            audioPlayer.close();
+            try {
+                videoGrabber.close();
+            } 
+            catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
+                throw new RuntimeException("Failed to close video grabber", e);
+            }
+        }
+
     }
 }

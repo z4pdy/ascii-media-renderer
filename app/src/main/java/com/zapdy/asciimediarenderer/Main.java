@@ -31,7 +31,6 @@ public class Main {
         IO.println(usage);
     }
 
-
     private static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, Size size, boolean reversed, boolean transparentBackground) {
         avutil.av_log_set_level(avutil.AV_LOG_QUIET);
 
@@ -46,16 +45,13 @@ public class Main {
 
     private static void displayAsciiVideoFromYouTube(String youTubeUrl, Size size, boolean reversed, boolean transparentBackground, boolean enableAudio) {
         YouTubeDirectStreamUrls youTubeDirectStreamUrls = YouTubeUtils.getYouTubeDirectStreamUrls(youTubeUrl, enableAudio);
-        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectStreamUrls.videoUrl());
-
         if (enableAudio) {
-            Thread audioThread = new Thread(() -> {
-                AudioPlayer.playAudio(youTubeDirectStreamUrls.audioUrl());
-            });
-            audioThread.start();
+            AsciiMediaRenderer.playAsciiVideo(youTubeDirectStreamUrls, size.getColumns(), size.getRows(), reversed, transparentBackground);
         }
-
-        displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
+        else {
+            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectStreamUrls.videoUrl());
+            displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
+        }
     }
 
     public static void main(String[] args) {
