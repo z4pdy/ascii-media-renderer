@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.jline.terminal.Size;
 
@@ -31,27 +30,14 @@ public class Main {
         IO.println(usage);
     }
 
-    private static void displayAsciiVideo(FFmpegFrameGrabber videoGrabber, Size size, boolean reversed, boolean transparentBackground) {
-        avutil.av_log_set_level(avutil.AV_LOG_QUIET);
-
-        videoGrabber.setOption("loglevel", "quiet");
-        AsciiMediaRenderer.displayAsciiVideo(videoGrabber, size.getColumns(), size.getRows(), reversed, transparentBackground); 
-    }
-
-    private static void displayAsciiVideoFromFile(File file, Size size, boolean reversed, boolean transparentBackground) {
-        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
-        displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
-    }
-
-    private static void displayAsciiVideoFromYouTube(String youTubeUrl, Size size, boolean reversed, boolean transparentBackground, boolean enableAudio) {
+    private static void playAsciiVideoFromYouTube(String youTubeUrl, Size size, boolean reversed, boolean transparentBackground, boolean enableAudio) {
         YouTubeDirectStreamUrls youTubeDirectStreamUrls = YouTubeUtils.getYouTubeDirectStreamUrls(youTubeUrl, enableAudio);
+        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectStreamUrls.videoUrl());
+        FFmpegFrameGrabber audioGrabber = null;
         if (enableAudio) {
-            AsciiMediaRenderer.playAsciiVideo(youTubeDirectStreamUrls, size.getColumns(), size.getRows(), reversed, transparentBackground);
+            audioGrabber = new FFmpegFrameGrabber(youTubeDirectStreamUrls.audioUrl());
         }
-        else {
-            FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectStreamUrls.videoUrl());
-            displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
-        }
+        AsciiMediaRenderer.playAsciiVideo(videoGrabber, audioGrabber, size.getColumns(), size.getRows(), reversed, transparentBackground);
     }
 
     public static void main(String[] args) {
@@ -105,21 +91,26 @@ public class Main {
             }
             case "-v" , "--video" -> {
                 File file = new File(args[1]);
-                displayAsciiVideoFromFile(file, size, reversed, transparentBackground);
+                FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
+                FFmpegFrameGrabber audioGrabber = null;
+                if (enableAudio) {
+                    audioGrabber = new FFmpegFrameGrabber(file);
+                }
+                AsciiMediaRenderer.playAsciiVideo(videoGrabber, audioGrabber, size.getColumns(), size.getRows(), reversed, transparentBackground);
             }
             case "-y" , "--youtube" -> {
                 String youTubeUrl = args[1];
-                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground, enableAudio);
+                playAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground, enableAudio);
             }
             case "-ys" , "--youtube-search" -> {
                 String youTubeSearchQuery = args[1];
                 String youTubeUrl = YouTubeUtils.getYouTubeUrlFromSearchQuery(youTubeSearchQuery);
-                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground, enableAudio);
+                playAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground, enableAudio);
             }
             default -> {
                 IO.println("Unknown mode: ".concat(args[0]));
                 printUsage();
-                System.exit(0);
+                System.exit(1);
             }
         }
     }

@@ -14,8 +14,8 @@ public class AudioPlayer {
     private FFmpegFrameGrabber audioGrabber;
     private SourceDataLine line;
 
-    public AudioPlayer(String audio) {
-        audioGrabber = new FFmpegFrameGrabber(audio);
+    public AudioPlayer(FFmpegFrameGrabber audioGrabber) {
+        this.audioGrabber = audioGrabber;
     }
 
     private static byte[] convertSamplesToBytes(Frame frame) {
@@ -52,6 +52,7 @@ public class AudioPlayer {
             line.open(format);
         } 
         catch (LineUnavailableException e) {
+            close();
             throw new RuntimeException("Failed to open audio output line", e);
         }
 
