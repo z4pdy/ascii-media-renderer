@@ -93,7 +93,7 @@ public class Main {
                 File file = new File(args[1]);
                 FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(file);
                 FFmpegFrameGrabber audioGrabber = null;
-                if (enableAudio) {
+                if (enableAudio && videoGrabber.getAudioChannels() > 0) {
                     audioGrabber = new FFmpegFrameGrabber(file);
                 }
                 AsciiMediaRenderer.playAsciiVideo(videoGrabber, audioGrabber, size.getColumns(), size.getRows(), reversed, transparentBackground);
