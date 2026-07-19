@@ -5,14 +5,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class YouTubeUtils {
-    public static String getYouTubeDirectVideoStreamUrl(String youTubeUrl) {
-        String youTubeDirectVideoStreamUrl = "";
+    public static YouTubeDirectStreamUrls getYouTubeDirectStreamUrls(String youTubeUrl, boolean enableAudio) {
+        String format;
+        if (enableAudio) {
+            format = "worstvideo+worstaudio";
+        }
+        else {
+            format = "worstvideo";
+        }
+
         ProcessBuilder processBuilder = new ProcessBuilder(
             "yt-dlp", 
             "--remote-components", "ejs:github", 
             "--js-runtimes", "node",
             "-g", 
-            "-f", "worstvideo", 
+            "-f", format, 
             youTubeUrl
         );            
         processBuilder.redirectErrorStream(true);
@@ -25,12 +32,20 @@ public class YouTubeUtils {
 		}
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
+        String youTubeDirectVideoStreamUrl = "";
+        String youTubeDirectAudioStreamUrl = "";
+
+
         String line;
         try {
 			while ((line = reader.readLine()) != null) {
 			    if (line.startsWith("http")) {
-			        youTubeDirectVideoStreamUrl = line;
-			        break;
+                    if (line.contains("mime=video")) {
+                        youTubeDirectVideoStreamUrl = line;
+                    }
+                    else if (line.contains("mime=audio") && enableAudio) {
+			            youTubeDirectAudioStreamUrl = line;
+                    }
 			    }
 			}
 		} 
@@ -45,11 +60,10 @@ public class YouTubeUtils {
 			throw new RuntimeException("yt-dlp process was interrupted", e);
 		}
 
-        if (youTubeDirectVideoStreamUrl.isEmpty()){ 
-            throw new RuntimeException("Failed to fetch YouTube direct video stream url.");
+        if (youTubeDirectVideoStreamUrl.isEmpty() || (youTubeDirectAudioStreamUrl.isEmpty() && enableAudio)) { 
+            throw new RuntimeException("Failed to fetch YouTube direct stream url.");
         }
-
-        return youTubeDirectVideoStreamUrl;
+        return new YouTubeDirectStreamUrls(youTubeDirectVideoStreamUrl, youTubeDirectAudioStreamUrl);
     }
 
     public static String getYouTubeUrlFromSearchQuery(String searchQuery) {

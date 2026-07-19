@@ -26,6 +26,7 @@ public class Main {
         [flags]
             --reversed, -r                  Reverse brightness
             --transparent-background, -t    Transparent background
+            --no-audio, -n                  Disable audio
         """;
         IO.println(usage);
     }
@@ -43,9 +44,17 @@ public class Main {
         displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
     }
 
-    private static void displayAsciiVideoFromYouTube(String youTubeUrl, Size size, boolean reversed, boolean transparentBackground) {
-        String youTubeDirectVideoStreamUrl = YouTubeUtils.getYouTubeDirectVideoStreamUrl(youTubeUrl);
-        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectVideoStreamUrl);
+    private static void displayAsciiVideoFromYouTube(String youTubeUrl, Size size, boolean reversed, boolean transparentBackground, boolean enableAudio) {
+        YouTubeDirectStreamUrls youTubeDirectStreamUrls = YouTubeUtils.getYouTubeDirectStreamUrls(youTubeUrl, enableAudio);
+        FFmpegFrameGrabber videoGrabber = new FFmpegFrameGrabber(youTubeDirectStreamUrls.videoUrl());
+
+        if (enableAudio) {
+            Thread audioThread = new Thread(() -> {
+                AudioPlayer.playAudio(youTubeDirectStreamUrls.audioUrl());
+            });
+            audioThread.start();
+        }
+
         displayAsciiVideo(videoGrabber, size, reversed, transparentBackground);
     }
 
@@ -62,6 +71,7 @@ public class Main {
 
         boolean reversed = false;
         boolean transparentBackground = false;
+        boolean enableAudio = true;
         
         if (args.length >= 3) {
             for (int i = 2; i < args.length; i++) {
@@ -70,6 +80,8 @@ public class Main {
                         reversed = true;
                     case "-t", "--transparent-background" ->
                         transparentBackground = true;
+                    case "-n", "--no-audio" ->
+                        enableAudio = false;
                     default -> {
                         IO.println("Unknown option: " + args[i]);
                         System.exit(1);
@@ -101,12 +113,12 @@ public class Main {
             }
             case "-y" , "--youtube" -> {
                 String youTubeUrl = args[1];
-                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground);
+                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground, enableAudio);
             }
             case "-ys" , "--youtube-search" -> {
                 String youTubeSearchQuery = args[1];
                 String youTubeUrl = YouTubeUtils.getYouTubeUrlFromSearchQuery(youTubeSearchQuery);
-                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground);
+                displayAsciiVideoFromYouTube(youTubeUrl, size, reversed, transparentBackground, enableAudio);
             }
             default -> {
                 IO.println("Unknown mode: ".concat(args[0]));
